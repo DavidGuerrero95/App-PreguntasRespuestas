@@ -1,0 +1,9 @@
+com\app\preguntasrespuestas\clients\SuscripcionesFeignClient.class
+com\app\preguntasrespuestas\repository\PreguntasRespuestasRepository.class
+com\app\preguntasrespuestas\AppPreguntasRespuestasApplication.class
+com\app\preguntasrespuestas\clients\EstadisticaFeignClient.class
+com\app\preguntasrespuestas\request\Respuestas.class
+com\app\preguntasrespuestas\controllers\PreguntasRespuestasController.class
+com\app\preguntasrespuestas\config\SwaggerConfiguration.class
+com\app\preguntasrespuestas\request\Preguntas.class
+com\app\preguntasrespuestas\models\PreguntasRespuestas.class
