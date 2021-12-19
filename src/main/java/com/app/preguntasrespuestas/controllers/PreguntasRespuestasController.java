@@ -235,12 +235,12 @@ public class PreguntasRespuestasController {
 
 	@PutMapping("/preguntasrespuestas/respuestaFinal/{nombre}")
 	@ResponseStatus(code = HttpStatus.OK)
-	public ResponseEntity<?> respuestaFinal(@PathVariable("nombre") String nombre, @RequestBody Respuestas respuesta) {
+	public ResponseEntity<?> respuestaFinal(@PathVariable("nombre") String nombre, @RequestParam("username") String username) {
 		if (prRepository.existsByNombre(nombre)) {
 			PreguntasRespuestas proyecto = prRepository.findByNombre(nombre);
 			List<List<List<String>>> listaRespuestas = proyecto.getRespuestas();
 			List<List<List<String>>> listaRespuestasUsuario = proyecto.getRespuestasUsuario();
-			Integer index = proyecto.getUsuarios().indexOf(respuesta.getUsername());
+			Integer index = proyecto.getUsuarios().indexOf(username);
 			for (int i = 0; i < listaRespuestasUsuario.size(); i++) {
 				if (listaRespuestasUsuario.get(i).get(index).size() == 0) {
 					return ResponseEntity.badRequest().body("LLenar toddas las opciones");
@@ -252,14 +252,14 @@ public class PreguntasRespuestasController {
 			List<String> usuarios = proyecto.getUsuarios();
 			for (int i = 0; i < listaRespuestasUsuario.size(); i++) {
 				List<List<String>> res = listaRespuestasUsuario.get(i);
-				res.remove(proyecto.getUsuarios().indexOf(respuesta.getUsername()));
+				res.remove(proyecto.getUsuarios().indexOf(username));
 				listaRespuestasUsuario.set(i, res);
 			}
-			usuarios.remove(respuesta.getUsername());
+			usuarios.remove(username);
 			proyecto.setRespuestas(listaRespuestas);
 			proyecto.setRespuestasUsuario(listaRespuestasUsuario);
 			prRepository.save(proyecto);
-			if (cbFactory.create("usuario").run(() -> sClient.inscribirCuestionario(nombre, respuesta.getUsername()),
+			if (cbFactory.create("usuario").run(() -> sClient.inscribirCuestionario(nombre, username),
 					e -> errorConexion(e))) {
 				logger.info("Creacion Correcta");
 			}
