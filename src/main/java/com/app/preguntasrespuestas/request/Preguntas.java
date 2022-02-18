@@ -12,7 +12,7 @@ public class Preguntas {
 	private Integer numeroPregunta;
 
 	@NotNull(message = "Tipo Consulta cannot be null")
-	@Max(5)
+	@Max(6)
 	@Min(1)
 	private Integer tipoConsulta;
 

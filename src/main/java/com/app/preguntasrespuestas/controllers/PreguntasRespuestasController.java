@@ -276,5 +276,23 @@ public class PreguntasRespuestasController {
 		logger.info(e.getMessage());
 		return false;
 	}
+	
+	@PutMapping("/preguntasrespuestas/editar/pregunta/enunciado/{nombre}")
+	@ResponseStatus(code = HttpStatus.OK)
+	public ResponseEntity<?> editarEnunciado(@PathVariable("nombre") String nombre, @RequestParam("numeroPregunta") Integer numeroPregunta, @RequestParam("enunciado") String enunciado) {
+		try {
+			PreguntasRespuestas proyecto = prRepository.findByNombre(nombre);
+			List<Preguntas> listPreguntas = proyecto.getPreguntas();
+			Preguntas preguntas = listPreguntas.get(numeroPregunta-1);
+			preguntas.setPregunta(enunciado);
+			listPreguntas.set(numeroPregunta-1, preguntas);
+			proyecto.setPreguntas(listPreguntas);
+			prRepository.save(proyecto);
+			return ResponseEntity.ok("Edicion correcta");
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("Error: "+e.getMessage()+", "+e.getLocalizedMessage());
+		}
+		
+	}
 
 }
