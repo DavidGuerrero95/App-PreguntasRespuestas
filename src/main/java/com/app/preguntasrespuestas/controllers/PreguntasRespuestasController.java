@@ -124,6 +124,42 @@ public class PreguntasRespuestasController {
 		}
 		return ResponseEntity.badRequest().body("Proyecto: " + nombre + " no existe");
 	}
+	
+	@PutMapping("/preguntasrespuestas/preguntas/editar/{nombre}")
+	@ResponseStatus(code = HttpStatus.OK)
+	public ResponseEntity<?> modificarPreguntas(@PathVariable("nombre") String nombre,
+			@RequestParam("numeroPregunta") Integer nPregunta,
+			@RequestParam("pregunta") String preg,
+			@RequestParam("informacion") String inf,
+			@RequestParam("Obligatorio") Boolean oblig,
+			@RequestParam("numeroOpciones") List<Integer> numeroOpciones,
+			@RequestParam("opciones") List<String> listaOpciones){
+		if (prRepository.existsByNombre(nombre)) {
+			PreguntasRespuestas pr = prRepository.findByNombre(nombre);
+			List<Preguntas> listaPreguntas = pr.getPreguntas();
+			Preguntas preguntaModificar = listaPreguntas.get(nPregunta);
+			List<String> listaOp = preguntaModificar.getOpciones();
+			if(preg != null) {
+				preguntaModificar.setPregunta(preg);
+			}
+			if(inf != null) {
+				preguntaModificar.setInformacion(inf);
+			}
+			if(oblig != null) {
+				preguntaModificar.setObligatorio(oblig);
+			}
+			if(numeroOpciones != null && listaOpciones != null) {
+				numeroOpciones.forEach(n -> {
+					listaOp.set(n, listaOpciones.get(numeroOpciones.indexOf(n)));
+				});
+			}
+			listaPreguntas.set(nPregunta, preguntaModificar);
+			pr.setPreguntas(listaPreguntas);
+			prRepository.save(pr);
+			return ResponseEntity.ok("Pregunta editada correctamente");
+		}
+		return ResponseEntity.badRequest().body("Proyecto: " + nombre + " no existe");
+	}
 
 	@PutMapping("/preguntasrespuestas/respuestas/colocar/{nombre}")
 	@ResponseStatus(code = HttpStatus.OK)
