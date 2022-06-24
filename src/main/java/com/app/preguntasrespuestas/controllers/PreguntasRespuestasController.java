@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.app.preguntasrespuestas.clients.EstadisticaFeignClient;
+import com.app.preguntasrespuestas.clients.GamificacionFeignClient;
+import com.app.preguntasrespuestas.clients.ProyectosFeignClient;
 import com.app.preguntasrespuestas.clients.SuscripcionesFeignClient;
 import com.app.preguntasrespuestas.models.PreguntasRespuestas;
 import com.app.preguntasrespuestas.repository.PreguntasRespuestasRepository;
@@ -46,6 +48,12 @@ public class PreguntasRespuestasController {
 
 	@Autowired
 	SuscripcionesFeignClient sClient;
+	
+	@Autowired
+	GamificacionFeignClient gClient;
+	
+	@Autowired
+	ProyectosFeignClient pClient;
 
 	// Crear Cuestionario
 	@PostMapping("/preguntasrespuestas/cuestionario/crear/")
@@ -131,30 +139,35 @@ public class PreguntasRespuestasController {
 			@RequestParam("numeroPregunta") Integer nPregunta,
 			@RequestParam("pregunta") String preg,
 			@RequestParam("informacion") String inf,
-			@RequestParam("Obligatorio") Boolean oblig,
-			@RequestParam("numeroOpciones") List<Integer> numeroOpciones,
+			@RequestParam(value = "obligatorio", defaultValue = "false") Boolean oblig,
+			@RequestParam("numeroOpciones") Integer numeroOpciones,
 			@RequestParam("opciones") List<String> listaOpciones){
 		if (prRepository.existsByNombre(nombre)) {
 			PreguntasRespuestas pr = prRepository.findByNombre(nombre);
 			List<Preguntas> listaPreguntas = pr.getPreguntas();
-			Preguntas preguntaModificar = listaPreguntas.get(nPregunta);
-			List<String> listaOp = preguntaModificar.getOpciones();
-			if(preg != null) {
+			Preguntas preguntaModificar = listaPreguntas.get(nPregunta-1);
+			if(!preg.isEmpty()) {
 				preguntaModificar.setPregunta(preg);
 			}
-			if(inf != null) {
+			if(!inf.isEmpty()) {
 				preguntaModificar.setInformacion(inf);
 			}
 			if(oblig != null) {
 				preguntaModificar.setObligatorio(oblig);
 			}
-			if(numeroOpciones != null && listaOpciones != null) {
-				numeroOpciones.forEach(n -> {
-					listaOp.set(n, listaOpciones.get(numeroOpciones.indexOf(n)));
-				});
+			if(numeroOpciones != null && listaOpciones.size()==numeroOpciones) {
+				List<String> lO = new ArrayList<String>();
+				for (int i=0;i<numeroOpciones;i++) {
+					lO.add(listaOpciones.get(i));
+				}
+				preguntaModificar.setOpciones(lO);
+				
 			}
-			listaPreguntas.set(nPregunta, preguntaModificar);
+			listaPreguntas.set(nPregunta-1, preguntaModificar);
 			pr.setPreguntas(listaPreguntas);
+			if (cbFactory.create("usuario").run(() -> eClient.editarPreguntasRespuestas(pr), e -> errorConexion(e))) {
+				logger.info("Creacion Correcta");
+			}
 			prRepository.save(pr);
 			return ResponseEntity.ok("Pregunta editada correctamente");
 		}
@@ -295,6 +308,12 @@ public class PreguntasRespuestasController {
 			proyecto.setRespuestas(listaRespuestas);
 			proyecto.setRespuestasUsuario(listaRespuestasUsuario);
 			prRepository.save(proyecto);
+			
+			if(pClient.verEstadoGamificacion(nombre) && gClient.verHabilitadoProyecto(nombre)) {
+				if (cbFactory.create("usuario").run(() -> gClient.agregarParticipante(nombre, username), e -> errorConexion(e))) {
+					logger.info("Se agrego correctamente el usuario a la gamificacion");
+				}
+			}
 			if (cbFactory.create("usuario").run(() -> sClient.inscribirCuestionario(nombre, username),
 					e -> errorConexion(e))) {
 				logger.info("Creacion Correcta");
